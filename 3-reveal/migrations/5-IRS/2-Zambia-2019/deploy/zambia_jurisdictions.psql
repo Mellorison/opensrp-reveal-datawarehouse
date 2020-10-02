@@ -10,15 +10,19 @@ BEGIN;
 
 SET search_path TO :"schema",public;
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS zambia_jurisdictions AS
-SELECT *,
+CREATE MATERIALIZED VIEW IF NOT EXISTS pending.zambia_jurisdictions AS
+SELECT
+    *,
     jurisdiction_id AS opensrp_jurisdiction_id,
     CASE
-        WHEN jurisdiction_depth < 4 THEN MD5(CONCAT(jurisdiction_id, '_remainder'))
+        WHEN jurisdiction_depth < 5 THEN MD5(CONCAT(jurisdiction_id, '_remainder'))
         ELSE jurisdiction_id
     END AS zambia_jurisdiction_id,
     FALSE AS is_virtual_jurisdiction
 FROM jurisdictions_materialized_view
+-- limit to Zambia(vl 2020)
+WHERE (jurisdiction_path[1] = 'ecfbf048-fb7a-47d8-a12b-61bf5d2a6e7b' OR
+    jurisdiction_id = 'ecfbf048-fb7a-47d8-a12b-61bf5d2a6e7b')
 UNION ALL
 SELECT
     MD5(CONCAT(jurisdiction_id, '_remainder')) AS jurisdiction_id,
@@ -34,13 +38,16 @@ SELECT
     MD5(CONCAT(jurisdiction_id, '_remainder')) AS zambia_jurisdiction_id,
     TRUE AS is_virtual_jurisdiction
 FROM jurisdictions_materialized_view
-WHERE jurisdiction_depth < 4;
+WHERE jurisdiction_depth < 5
+-- limit to Zambia(vl 2020)
+AND (jurisdiction_path[1] = 'ecfbf048-fb7a-47d8-a12b-61bf5d2a6e7b' OR
+jurisdiction_id = 'ecfbf048-fb7a-47d8-a12b-61bf5d2a6e7b');
 
-CREATE UNIQUE INDEX IF NOT EXISTS zambia_jurisdictions_id_idx ON zambia_jurisdictions (jurisdiction_id);
-CREATE INDEX IF NOT EXISTS zambia_jurisdictions_opensrp_jurisdiction_id_idx ON zambia_jurisdictions (opensrp_jurisdiction_id);
-CREATE INDEX IF NOT EXISTS zambia_jurisdictions_parent_id_idx ON zambia_jurisdictions (jurisdiction_parent_id);
-CREATE INDEX IF NOT EXISTS zambia_jurisdictions_jurisdiction_depth_idx ON zambia_jurisdictions (jurisdiction_depth);
-CREATE INDEX IF NOT EXISTS zambia_jurisdictions_jurisdiction_root_parent_id_idx ON zambia_jurisdictions (jurisdiction_root_parent_id);
-CREATE INDEX IF NOT EXISTS zambia_jurisdictions_jurisdiction_geometry_gix ON zambia_jurisdictions USING GIST (jurisdiction_geometry);
+CREATE UNIQUE INDEX IF NOT EXISTS zambia_jurisdictions_id_idx ON pending.zambia_jurisdictions (jurisdiction_id);
+CREATE INDEX IF NOT EXISTS zambia_jurisdictions_opensrp_jurisdiction_id_idx ON pending.zambia_jurisdictions (opensrp_jurisdiction_id);
+CREATE INDEX IF NOT EXISTS zambia_jurisdictions_parent_id_idx ON pending.zambia_jurisdictions (jurisdiction_parent_id);
+CREATE INDEX IF NOT EXISTS zambia_jurisdictions_jurisdiction_depth_idx ON pending.zambia_jurisdictions (jurisdiction_depth);
+CREATE INDEX IF NOT EXISTS zambia_jurisdictions_jurisdiction_root_parent_id_idx ON pending.zambia_jurisdictions (jurisdiction_root_parent_id);
+CREATE INDEX IF NOT EXISTS zambia_jurisdictions_jurisdiction_geometry_gix ON pending.zambia_jurisdictions USING GIST (jurisdiction_geometry);
 
 COMMIT;

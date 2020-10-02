@@ -20,7 +20,6 @@ SELECT * FROM
         zambia_jurisdictions.jurisdiction_id AS jurisdiction_id,
         zambia_jurisdictions.jurisdiction_parent_id AS jurisdiction_parent_id,
         zambia_jurisdictions.jurisdiction_name AS jurisdiction_name,
-        --zambia_jurisdictions.jurisdiction_geometry AS jurisdiction_geometry,
         zambia_jurisdictions.jurisdiction_depth AS jurisdiction_depth,
         zambia_jurisdictions.jurisdiction_path AS jurisdiction_path,
         zambia_jurisdictions.jurisdiction_name_path AS jurisdiction_name_path,
@@ -47,27 +46,27 @@ SELECT * FROM
         coverage_query.sprayCov AS sprayCov,
         CASE
             WHEN irs_structures.totStruct = 0 THEN 0
-            ELSE CAST(irs_structures.foundStruct AS DECIMAL(7,2))/CAST(irs_structures.totStruct AS DECIMAL(7,2))
+            ELSE CAST(irs_structures.foundStruct AS DECIMAL)/CAST(irs_structures.totStruct AS DECIMAL)
         END AS sprayTarg,
         CASE
             WHEN irs_structures.foundStruct = 0 THEN 0
-            ELSE CAST(irs_structures.sprayedStruct AS DECIMAL(7,2))/CAST(irs_structures.foundStruct AS DECIMAL(7,2))
+            ELSE CAST(irs_structures.sprayedStruct AS DECIMAL)/CAST(irs_structures.foundStruct AS DECIMAL)
         END AS spraySuccess,
         CASE
 	        WHEN irs_structures.totStruct = 0 THEN NULL
-	        ELSE CAST(irs_structures.sprayedStruct AS DECIMAL(7,2)) / CAST(irs_structures.totStruct AS DECIMAL(7,2))
+	        ELSE CAST(irs_structures.sprayedStruct AS DECIMAL) / CAST(irs_structures.totStruct AS DECIMAL)
 	    END AS spray_effectiveness,
         GREATEST(
         	0,
-        	CEIL((CAST(irs_structures.totStruct AS DECIMAL(7,2)) * 0.9) - CAST(irs_structures.sprayedStruct AS DECIMAL(7,2)))
+        	CEIL((CAST(irs_structures.totStruct AS DECIMAL) * 0.9) - CAST(irs_structures.sprayedStruct AS DECIMAL))
         ) AS structures_remaining_to_90_se,
         GREATEST(
         	0,
-        	(CAST(irs_structures.totStruct AS DECIMAL(7,2)) * 0.9) - CAST(irs_structures.sprayedStruct AS DECIMAL(7,2))
+        	(CAST(irs_structures.totStruct AS DECIMAL) * 0.9) - CAST(irs_structures.sprayedStruct AS DECIMAL)
         ) / 15.0 AS tla_days_to_90_se,
         CASE
             WHEN irs_structures.sprayed_rooms_eligible = 0 THEN 0
-            ELSE CAST(irs_structures.sprayed_rooms_sprayed AS DECIMAL(7,2))/CAST(irs_structures.sprayed_rooms_eligible AS DECIMAL(7,2))
+            ELSE CAST(irs_structures.sprayed_rooms_sprayed AS DECIMAL)/CAST(irs_structures.sprayed_rooms_eligible AS DECIMAL)
         END AS roomCov,
         CASE
             WHEN coverage_query.sprayCov = 0 THEN 'n/a'
@@ -79,7 +78,7 @@ SELECT * FROM
     FROM plans
     LEFT JOIN zambia_plan_jurisdictions
         ON plans.identifier = zambia_plan_jurisdictions.plan_id
-    LEFT JOIN zambia_jurisdictions
+    LEFT JOIN pending.zambia_jurisdictions
         ON zambia_plan_jurisdictions.zambia_jurisdiction_id = zambia_jurisdictions.jurisdiction_id
     LEFT JOIN jurisdictions AS health_center_jurisdictions
     	ON health_center_jurisdictions.id = zambia_jurisdictions.jurisdiction_path[4]
@@ -99,7 +98,7 @@ SELECT * FROM
             array_concat_agg(notsprayed_reasons) FILTER (WHERE notsprayed_reasons <> '{}')  AS notsprayed_reasons,
             (MAX(ARRAY[TO_JSON(event_date)#>>'{}', event_id]) FILTER (WHERE event_id is not null))[2] AS latest_spray_event_id,
             MAX(event_date) AS latest_spray_event_date
-        FROM zambia_irs_structures AS zambia_irs_structures
+        FROM pending.zambia_irs_structures AS zambia_irs_structures
         WHERE
             zambia_irs_structures.structure_jurisdiction_id = zambia_jurisdictions.jurisdiction_id AND
             business_status NOT IN ('Not Eligible', 'No Tasks') AND
@@ -109,7 +108,7 @@ SELECT * FROM
         SELECT
             CASE
                 WHEN irs_structures.totStruct = 0 THEN 0
-                ELSE CAST(irs_structures.sprayedStruct AS DECIMAL(7,2))/CAST(irs_structures.totStruct AS DECIMAL(7,2))
+                ELSE CAST(irs_structures.sprayedStruct AS DECIMAL)/CAST(irs_structures.totStruct AS DECIMAL)
             END AS sprayCov
     ) AS coverage_query ON true
     LEFT JOIN LATERAL (
@@ -137,6 +136,7 @@ SELECT * FROM
 		LIMIT 1
     ) AS irs_sa_events ON true
     WHERE plans.intervention_type IN ('IRS', 'Dynamic-IRS') AND plans.status NOT IN ('draft', 'retired')
+    AND plans.identifier = 'd40c1227-644b-55d6-b3f3-bed42380322f'
 ) AS main_query
 ORDER BY CASE WHEN main_query.is_virtual_jurisdiction THEN 1 ELSE 0 END ASC, main_query.jurisdiction_name;
 
@@ -221,23 +221,23 @@ SELECT * FROM
             zambia_focus_area_irs_query.visitedAreas AS visitedAreas,
             CASE
                 WHEN zambia_focus_area_irs_query.sprayCovAboveMin = 0 THEN 0
-                ELSE CAST(zambia_focus_area_irs_query.sprayCovHigh AS DECIMAL(10,4))/CAST(zambia_focus_area_irs_query.sprayCovAboveMin AS DECIMAL(10,4))
+                ELSE CAST(zambia_focus_area_irs_query.sprayCovHigh AS DECIMAL)/CAST(zambia_focus_area_irs_query.sprayCovAboveMin AS DECIMAL)
             END AS perctVisAreasEffect,
             CASE
                 WHEN zambia_focus_area_irs_query.totStruct = 0 THEN 0
-                ELSE CAST(zambia_focus_area_irs_query.sprayedStruct AS DECIMAL(10,4))/CAST(zambia_focus_area_irs_query.totStruct AS DECIMAL(10,4))
+                ELSE CAST(zambia_focus_area_irs_query.sprayedStruct AS DECIMAL)/CAST(zambia_focus_area_irs_query.totStruct AS DECIMAL)
             END AS sprayCovTarg,
             CASE
                 WHEN zambia_focus_area_irs_query.totStruct = 0 THEN 0
-                ELSE CAST(zambia_focus_area_irs_query.foundStruct AS DECIMAL(10,4))/CAST(zambia_focus_area_irs_query.totStruct AS DECIMAL(10,4))
+                ELSE CAST(zambia_focus_area_irs_query.foundStruct AS DECIMAL)/CAST(zambia_focus_area_irs_query.totStruct AS DECIMAL)
             END AS foundCoverage,
             CASE
                 WHEN zambia_focus_area_irs_query.foundStruct = 0 THEN 0
-                ELSE CAST(zambia_focus_area_irs_query.sprayedStruct AS DECIMAL(10,4))/CAST(zambia_focus_area_irs_query.foundStruct AS DECIMAL(10,4))
+                ELSE CAST(zambia_focus_area_irs_query.sprayedStruct AS DECIMAL)/CAST(zambia_focus_area_irs_query.foundStruct AS DECIMAL)
             END AS spraySuccess,
             CASE
                 WHEN zambia_focus_area_irs_query.sprayed_rooms_eligible = 0 THEN 0
-                ELSE CAST(zambia_focus_area_irs_query.sprayed_rooms_sprayed AS DECIMAL(10,4))/CAST(zambia_focus_area_irs_query.sprayed_rooms_eligible AS DECIMAL(10,4))
+                ELSE CAST(zambia_focus_area_irs_query.sprayed_rooms_sprayed AS DECIMAL)/CAST(zambia_focus_area_irs_query.sprayed_rooms_eligible AS DECIMAL)
             END AS roomCov,
             zambia_focus_area_irs_query.avg_spray_effectiveness AS avg_spray_effectiveness,
             zambia_focus_area_irs_query.structures_remaining_to_90_se AS structures_remaining_to_90_se,
@@ -304,6 +304,7 @@ SELECT * FROM
         AND zambia_focus_area_irs_query.totAreas > 0
     ) AS jurisdictions_query ON true
     WHERE plans.intervention_type IN ('IRS', 'Dynamic-IRS') AND plans.status NOT IN ('draft', 'retired')
+    AND plans.identifier = 'd40c1227-644b-55d6-b3f3-bed42380322f'
 ) AS main_query
 ORDER BY CASE WHEN main_query.is_virtual_jurisdiction THEN 1 ELSE 0 END ASC, main_query.jurisdiction_name;
 
@@ -313,12 +314,27 @@ CREATE INDEX IF NOT EXISTS zambia_irs_jurisdictions_jurisdiction_idx ON pending.
 CREATE INDEX IF NOT EXISTS zambia_irs_jurisdictions_jurisdiction_parent_idx ON pending.zambia_irs_jurisdictions (jurisdiction_parent_id);
 CREATE UNIQUE INDEX IF NOT EXISTS zambia_irs_jurisdictions_idx ON pending.zambia_irs_jurisdictions (id);
 
+
+DROP MATERIALIZED VIEW IF EXISTS deprecated.structure_geo_hierarchy CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS deprecated.zambia_jurisdictions CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS deprecated.zambia_structure_jurisdictions CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS deprecated.zambia_irs_structures CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS deprecated.zambia_focus_area_irs CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS deprecated.zambia_irs_jurisdictions CASCADE;
+
+ALTER MATERIALIZED VIEW structure_geo_hierarchy SET SCHEMA deprecated;
+ALTER MATERIALIZED VIEW zambia_jurisdictions SET SCHEMA deprecated;
+ALTER MATERIALIZED VIEW zambia_structure_jurisdictions SET SCHEMA deprecated;
+ALTER MATERIALIZED VIEW zambia_irs_structures SET SCHEMA deprecated;
 ALTER MATERIALIZED VIEW zambia_focus_area_irs SET SCHEMA deprecated;
 ALTER MATERIALIZED VIEW zambia_irs_jurisdictions SET SCHEMA deprecated;
 
+ALTER MATERIALIZED VIEW pending.structure_geo_hierarchy SET SCHEMA public;
+ALTER MATERIALIZED VIEW pending.zambia_jurisdictions SET SCHEMA public;
+ALTER MATERIALIZED VIEW pending.zambia_structure_jurisdictions SET SCHEMA public;
+ALTER MATERIALIZED VIEW pending.zambia_irs_structures SET SCHEMA public;
 ALTER MATERIALIZED VIEW pending.zambia_focus_area_irs SET SCHEMA public;
---ALTER MATERIALIZED VIEW pending.zambia_focus_area_irs SET SCHEMA :"schema";
 ALTER MATERIALIZED VIEW pending.zambia_irs_jurisdictions SET SCHEMA public;
---ALTER MATERIALIZED VIEW pending.zambia_irs_jurisdictions SET SCHEMA :"schema";
+
 
 COMMIT;

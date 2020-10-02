@@ -3,11 +3,11 @@
 
 -- stop running queries
 SELECT
-  -- count(*)
-  pg_cancel_backend(pid) as canceled
+  pid
+  -- pg_cancel_backend(pid) as canceled
 FROM pg_stat_activity
-WHERE (now() - pg_stat_activity.query_start) > interval '5 minutes'
-AND state = 'idle'
+WHERE (now() - pg_stat_activity.query_start) > interval '1 minutes'
+-- AND state = 'idle'
 AND (query ILIKE '%refresh_mat_view%' OR query ILIKE '%structure_geo_hierarchy%') OR query ILIKE '%refresh materialized view%';
 
 -- vacuum stuff
