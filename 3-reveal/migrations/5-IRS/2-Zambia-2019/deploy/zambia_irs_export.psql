@@ -84,29 +84,29 @@ SELECT
         WHEN zambia_plan_jurisdictions.plan_id IS NOT NULL THEN TRUE
         ELSE FALSE
     END AS in_plan_jurisdiction
-FROM zambia_irs_structures
+FROM pending.zambia_irs_structures
 LEFT JOIN events
     ON zambia_irs_structures.event_id = events.id
-LEFT JOIN zambia_jurisdictions
+LEFT JOIN pending.zambia_jurisdictions
     ON zambia_jurisdictions.jurisdiction_id = zambia_irs_structures.structure_jurisdiction_id
 LEFT JOIN jurisdictions AS assigned_jurisdictions
     ON assigned_jurisdictions.id = zambia_irs_structures.old_jurisdiction_id
 LEFT JOIN jurisdictions AS geo_jurisdictions
     ON geo_jurisdictions.id = zambia_irs_structures.geo_jurisdiction_id
-LEFT JOIN zambia_plan_jurisdictions
+LEFT JOIN pending.zambia_plan_jurisdictions
     ON zambia_plan_jurisdictions.plan_id = zambia_irs_structures.plan_id 
       AND zambia_plan_jurisdictions.zambia_jurisdiction_id = zambia_irs_structures.structure_jurisdiction_id;
 
-CREATE INDEX IF NOT EXISTS zambia_irs_export_event_date_idx ON zambia_irs_export (event_date);
+CREATE INDEX IF NOT EXISTS zambia_irs_export_event_date_idx ON pending.zambia_irs_export (event_date);
 
-CREATE INDEX IF NOT EXISTS zambia_irs_export_task_id_idx ON zambia_irs_export (task_id);
+CREATE INDEX IF NOT EXISTS zambia_irs_export_task_id_idx ON pending.zambia_irs_export (task_id);
 
-CREATE INDEX IF NOT EXISTS zambia_irs_export_plan_id_idx ON zambia_irs_export (plan_id);
+CREATE INDEX IF NOT EXISTS zambia_irs_export_plan_id_idx ON pending.zambia_irs_export (plan_id);
 
-CREATE INDEX IF NOT EXISTS zambia_irs_export_event_id_idx ON zambia_irs_export (event_id);
+CREATE INDEX IF NOT EXISTS zambia_irs_export_event_id_idx ON pending.zambia_irs_export (event_id);
 
-CREATE INDEX IF NOT EXISTS zambia_irs_export_structure_jurisdiction_idx ON zambia_irs_export (structure_jurisdiction_id);
+CREATE INDEX IF NOT EXISTS zambia_irs_export_structure_jurisdiction_idx ON pending.zambia_irs_export (structure_jurisdiction_id);
 
-CREATE UNIQUE INDEX IF NOT EXISTS zambia_irs_export_idx ON zambia_irs_export (structure_id, task_id);
+CREATE UNIQUE INDEX IF NOT EXISTS zambia_irs_export_idx ON pending.zambia_irs_export (structure_id, task_id);
 
 COMMIT;

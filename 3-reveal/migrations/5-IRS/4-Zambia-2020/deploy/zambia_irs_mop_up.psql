@@ -76,7 +76,7 @@ SELECT * FROM
         irs_sa_events.latest_event_id AS latest_sa_event_id,
         irs_sa_events.latest_event_date AS latest_sa_event_date
     FROM plans
-    LEFT JOIN zambia_plan_jurisdictions
+    LEFT JOIN pending.zambia_plan_jurisdictions
         ON plans.identifier = zambia_plan_jurisdictions.plan_id
     LEFT JOIN pending.zambia_jurisdictions
         ON zambia_plan_jurisdictions.zambia_jurisdiction_id = zambia_jurisdictions.jurisdiction_id
@@ -317,24 +317,30 @@ CREATE UNIQUE INDEX IF NOT EXISTS zambia_irs_jurisdictions_idx ON pending.zambia
 
 DROP MATERIALIZED VIEW IF EXISTS deprecated.structure_geo_hierarchy CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS deprecated.zambia_jurisdictions CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS deprecated.zambia_plan_jurisdictions CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS deprecated.zambia_structure_jurisdictions CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS deprecated.zambia_irs_structures CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS deprecated.zambia_focus_area_irs CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS deprecated.zambia_irs_jurisdictions CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS deprecated.zambia_irs_export CASCADE;
 
 ALTER MATERIALIZED VIEW structure_geo_hierarchy SET SCHEMA deprecated;
 ALTER MATERIALIZED VIEW zambia_jurisdictions SET SCHEMA deprecated;
+ALTER MATERIALIZED VIEW zambia_plan_jurisdictions SET SCHEMA deprecated;
 ALTER MATERIALIZED VIEW zambia_structure_jurisdictions SET SCHEMA deprecated;
 ALTER MATERIALIZED VIEW zambia_irs_structures SET SCHEMA deprecated;
 ALTER MATERIALIZED VIEW zambia_focus_area_irs SET SCHEMA deprecated;
 ALTER MATERIALIZED VIEW zambia_irs_jurisdictions SET SCHEMA deprecated;
+ALTER MATERIALIZED VIEW zambia_irs_export SET SCHEMA deprecated;
 
 ALTER MATERIALIZED VIEW pending.structure_geo_hierarchy SET SCHEMA public;
 ALTER MATERIALIZED VIEW pending.zambia_jurisdictions SET SCHEMA public;
+ALTER MATERIALIZED VIEW pending.zambia_plan_jurisdictions SET SCHEMA public;
 ALTER MATERIALIZED VIEW pending.zambia_structure_jurisdictions SET SCHEMA public;
 ALTER MATERIALIZED VIEW pending.zambia_irs_structures SET SCHEMA public;
 ALTER MATERIALIZED VIEW pending.zambia_focus_area_irs SET SCHEMA public;
 ALTER MATERIALIZED VIEW pending.zambia_irs_jurisdictions SET SCHEMA public;
+ALTER MATERIALIZED VIEW pending.zambia_irs_export SET SCHEMA public;
 
 
 COMMIT;

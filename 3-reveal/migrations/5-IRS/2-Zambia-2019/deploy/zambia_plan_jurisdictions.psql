@@ -11,7 +11,7 @@ BEGIN;
 
 SET search_path TO :"schema",public;
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS zambia_plan_jurisdictions AS
+CREATE MATERIALIZED VIEW IF NOT EXISTS pending.zambia_plan_jurisdictions AS
 SELECT DISTINCT ON (all_plan_jurisdictions.plan_id, all_plan_jurisdictions.jurisdiction_id) all_plan_jurisdictions.plan_id,
     all_plan_jurisdictions.jurisdiction_id,
     COALESCE(zambia_virtual_jurisdictions.jurisdiction_id, all_plan_jurisdictions.jurisdiction_id) AS zambia_jurisdiction_id,
@@ -26,15 +26,15 @@ FROM
 LEFT JOIN jurisdictions ON jurisdictions.id = all_plan_jurisdictions.jurisdiction_id
 LEFT JOIN
     (SELECT *
-     FROM zambia_jurisdictions
+     FROM pending.zambia_jurisdictions
      WHERE is_virtual_jurisdiction = TRUE) AS zambia_virtual_jurisdictions
     ON zambia_virtual_jurisdictions.opensrp_jurisdiction_id = all_plan_jurisdictions.jurisdiction_id
 ORDER BY all_plan_jurisdictions.plan_id ASC, all_plan_jurisdictions.jurisdiction_id ASC;
 
 
-CREATE UNIQUE INDEX IF NOT EXISTS zambia_plan_jurisdictions_plan_id_jurisdiction_id_idx ON zambia_plan_jurisdictions (plan_id, jurisdiction_id);
-CREATE INDEX IF NOT EXISTS zambia_plan_jurisdictions_plan_id_idx ON zambia_plan_jurisdictions (plan_id);
-CREATE INDEX IF NOT EXISTS zambia_plan_jurisdictions_jurisdiction_id_idx ON zambia_plan_jurisdictions (jurisdiction_id);
-CREATE INDEX IF NOT EXISTS zambia_plan_jurisdictions_zambia_jurisdiction_id_idx ON zambia_plan_jurisdictions (zambia_jurisdiction_id);
+CREATE UNIQUE INDEX IF NOT EXISTS zambia_plan_jurisdictions_plan_id_jurisdiction_id_idx ON pending.zambia_plan_jurisdictions (plan_id, jurisdiction_id);
+CREATE INDEX IF NOT EXISTS zambia_plan_jurisdictions_plan_id_idx ON pending.zambia_plan_jurisdictions (plan_id);
+CREATE INDEX IF NOT EXISTS zambia_plan_jurisdictions_jurisdiction_id_idx ON pending.zambia_plan_jurisdictions (jurisdiction_id);
+CREATE INDEX IF NOT EXISTS zambia_plan_jurisdictions_zambia_jurisdiction_id_idx ON pending.zambia_plan_jurisdictions (zambia_jurisdiction_id);
 
 COMMIT;
