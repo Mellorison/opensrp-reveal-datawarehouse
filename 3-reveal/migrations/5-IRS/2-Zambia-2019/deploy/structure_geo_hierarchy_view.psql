@@ -1,0 +1,22 @@
+CREATE MATERIALIZED VIEW pending.structure_geo_hierarchy AS
+SELECT DISTINCT ON (structures.id) structures.id,
+   jurisdictions.jurisdiction_id AS jurisdiction_id,
+   jurisdictions.jurisdiction_depth AS jurisdiction_depth,
+   geo_jurisdictions.id AS geo_jurisdiction_id,
+   geo_jurisdictions.geographic_level AS geo_jurisdiction_depth,
+   st_within(structures.geometry, geo_jurisdictions.geometry) AS geo_strict_within
+  FROM structures
+    LEFT JOIN jurisdictions geo_jurisdictions ON st_dwithin(geo_jurisdictions.geometry, structures.geometry, (150.0 / 111111.0)::double precision) AND geo_jurisdictions.status::text = 'Active'::text
+    LEFT JOIN jurisdictions_materialized_view jurisdictions ON jurisdictions.jurisdiction_id::text = structures.jurisdiction_id::text
+ WHERE
+    jurisdictions.jurisdiction_path[1] = 'ecfbf048-fb7a-47d8-a12b-61bf5d2a6e7b'
+    AND jurisdictions.jurisdiction_depth >= 3
+ ORDER BY structures.id, geo_jurisdictions.geographic_level DESC, (
+       CASE
+           WHEN geo_jurisdictions.id::text = structures.jurisdiction_id::text THEN 0
+           ELSE 1
+       END), geo_jurisdictions.id;
+ 
+CREATE INDEX IF NOT EXISTS structure_geo_hierarchy_jurisdiction_id_idx ON pending.structure_geo_hierarchy (jurisdiction_id);
+CREATE INDEX IF NOT EXISTS structure_geo_hierarchy_geo_jurisdiction_id_idx ON pending.structure_geo_hierarchy (geo_jurisdiction_id);
+CREATE UNIQUE INDEX IF NOT EXISTS structure_geo_hierarchy_id_idx ON pending.structure_geo_hierarchy (id);
